@@ -40,6 +40,90 @@ func TestReadGreaterThan(t *testing.T) {
 	}
 }
 
+func TestReadGreaterThanOrEqual(t *testing.T) {
+	test := `>= 0`
+	tokenizer := NewTokenizer(strings.NewReader(test))
+
+	token, err := tokenizer.ReadToken()
+
+	if err != nil {
+		t.FailNow()
+		t.Log(err)
+	}
+
+	if token.Literal != ">=" {
+		t.Fail()
+		t.Logf("failed to get greater than or equal token: got %s, expected >=", token.Literal)
+	}
+}
+
+func TestReadLessThan(t *testing.T) {
+	test := `<`
+	tokenizer := NewTokenizer(strings.NewReader(test))
+
+	token, err := tokenizer.ReadToken()
+
+	if err != nil {
+		t.FailNow()
+	}
+
+	if token.Literal != "<" {
+		t.Fail()
+		t.Logf("failed to get less than token: got %s, expected <", token.Literal)
+	}
+}
+
+func TestReadLessThanOrEqual(t *testing.T) {
+	test := `<= 0`
+	tokenizer := NewTokenizer(strings.NewReader(test))
+
+	token, err := tokenizer.ReadToken()
+
+	if err != nil {
+		t.FailNow()
+		t.Log(err)
+	}
+
+	if token.Literal != "<=" {
+		t.Fail()
+		t.Logf("failed to get less than or equal token: got %s, expected <=", token.Literal)
+	}
+}
+
+func TestReadEqual(t *testing.T) {
+	test := `== 0`
+	tokenizer := NewTokenizer(strings.NewReader(test))
+
+	token, err := tokenizer.ReadToken()
+
+	if err != nil {
+		t.FailNow()
+		t.Log(err)
+	}
+
+	if token.Literal != "==" {
+		t.Fail()
+		t.Logf("failed to get equal token: got %s, expected ==", token.Literal)
+	}
+}
+
+func TestReadNotEqual(t *testing.T) {
+	test := `!= 0`
+	tokenizer := NewTokenizer(strings.NewReader(test))
+
+	token, err := tokenizer.ReadToken()
+
+	if err != nil {
+		t.FailNow()
+		t.Log(err)
+	}
+
+	if token.Literal != "!=" {
+		t.Fail()
+		t.Logf("failed to get not equal token: got %s, expected !=", token.Literal)
+	}
+}
+
 func TestReadNumeric(t *testing.T) {
 	test := `10,000,000_000.314159 `
 	expect := `10,000,000_000.314159`
