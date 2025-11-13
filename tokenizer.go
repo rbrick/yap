@@ -151,6 +151,7 @@ func (t *Tokenizer) readNumeric() (*Token, error) {
 	var literal strings.Builder
 	var numeric strings.Builder
 
+	lastSeparator := false
 	isDecimal := false
 
 	for {
@@ -167,7 +168,15 @@ func (t *Tokenizer) readNumeric() (*Token, error) {
 		if c >= '0' && c <= '9' {
 			literal.WriteRune(c)
 			numeric.WriteRune(c)
+
+			lastSeparator = false
 		} else if c == '_' || c == ',' {
+			if lastSeparator {
+				// error: two separators in a row
+				return nil, errors.New("invalid numeric, two separators in a row")
+			}
+
+			lastSeparator = true
 			// should support commas so we can do a >= 1,000,000,000
 			literal.WriteRune(c)
 		} else if c == '.' {
@@ -178,6 +187,7 @@ func (t *Tokenizer) readNumeric() (*Token, error) {
 
 			// mark as a decimal
 			isDecimal = true
+			lastSeparator = false
 
 			literal.WriteRune(c)
 			numeric.WriteRune(c)
