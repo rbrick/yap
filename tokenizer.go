@@ -30,6 +30,7 @@ const (
 	Numeric
 	Operator
 	Punctuation
+	WhiteSpace
 )
 
 type Token struct {
@@ -213,6 +214,43 @@ func (t *Tokenizer) readNumeric() (*Token, error) {
 
 }
 
+func (t *Tokenizer) readIdentifier(first rune) (*Token, error) {
+	var literal strings.Builder
+	literal.WriteRune(first)
+
+	for {
+		c, _, err := t.reader.ReadRune()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		if t.isIdentifierPart(c) {
+			literal.WriteRune(c)
+		} else {
+			t.reader.UnreadRune()
+			break
+		}
+	}
+
+	return &Token{
+		Type:    Identifier,
+		Literal: literal.String(),
+	}, nil
+}
+
+func (t *Tokenizer) isIdentifierStart(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '.' || r == '$'
+}
+
+func (t *Tokenizer) isIdentifierPart(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '.' || r == '$' || r == '[' || r == ']'
+}
+
 func (t *Tokenizer) ReadToken() (*Token, error) {
 	r, _, err := t.reader.ReadRune()
 
@@ -249,7 +287,10 @@ func (t *Tokenizer) ReadToken() (*Token, error) {
 		{
 			// discard whitespace
 			if unicode.IsSpace(r) {
-				return nil, nil
+				return &Token{
+					Type:    WhiteSpace,
+					Literal: string(r),
+				}, nil
 			}
 
 			// try reading a numeric
@@ -260,10 +301,40 @@ func (t *Tokenizer) ReadToken() (*Token, error) {
 
 			// try reading an identifier
 
+			if t.isIdentifierStart(r) {
+				return t.readIdentifier(r)
+			}
+
+			// unrecognized token
 			return &Token{}, nil
 		}
 	}
+}
 
+func Tokenize(r io.Reader) ([]*Token, error) {
+	tokenizer := NewTokenizer(r)
+	var tokens []*Token
+
+	for {
+		token, err := tokenizer.ReadToken()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		// skip whitespace tokens
+		if token.Type == WhiteSpace {
+			continue
+		}
+
+		tokens = append(tokens, token)
+	}
+
+	return tokens, nil
 }
 
 func NewTokenizer(r io.Reader) *Tokenizer {

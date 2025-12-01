@@ -152,3 +152,20 @@ func TestReadNumeric(t *testing.T) {
 	}
 
 }
+
+func TestReadIdentifier(t *testing.T) {
+	test := `test.test_array[0].$current_value`
+	expect := `test.test_array[0].$current_value`
+	tokenizer := NewTokenizer(strings.NewReader(test))
+
+	token, err := tokenizer.ReadToken()
+
+	if err != nil {
+		t.FailNow()
+	}
+
+	if token.Literal != expect {
+		t.Fail()
+		t.Logf("got: %s, expected: %s", expect, token.Literal)
+	}
+}
