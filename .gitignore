@@ -2,3 +2,4 @@
 yap
 *.o
 examples/examples
+node_modules

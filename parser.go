@@ -65,6 +65,9 @@ func (p *Parser) parseFunctionCall(ident *Ident) (Expr, error) {
 	for {
 		token := p.currentToken() // current token == func2
 
+		if token == nil {
+			break
+		}
 		if token.Type == Punctuation && token.Literal == ")" {
 			break
 		}
@@ -138,17 +141,6 @@ func (p *Parser) parseLiteral() (Expr, error) {
 }
 
 func (p *Parser) parseExpression() (Expr, error) {
-
-	// entry point
-
-	// what is an expression?
-	// identifier
-	// literal
-	// function call
-	// unary operation
-	// binary operation
-
-	// for simplicity, let's start with identifiers and literals only
 
 	token := p.currentToken()
 	if token == nil {

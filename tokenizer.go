@@ -275,7 +275,7 @@ func (t *Tokenizer) readIdentifier(first rune) (*Token, error) {
 }
 
 func (t *Tokenizer) isIdentifierStart(r rune) bool {
-	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '.' || r == '$'
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '.' || r == '$' || r == '@'
 }
 
 func (t *Tokenizer) isIdentifierPart(r rune) bool {

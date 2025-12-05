@@ -6,7 +6,7 @@ import (
 )
 
 type EvalContext struct {
-	Json    map[string]any
+	Json    any
 	FuncMap map[string]Function
 }
 

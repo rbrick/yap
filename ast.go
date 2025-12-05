@@ -40,12 +40,25 @@ func (b *BinOp) Node() Expr {
 	return b
 }
 
+func (b *BinOp) toBigFloat(i interface{}) (*big.Float, bool) {
+	switch x := i.(type) {
+	case *big.Float:
+		return x, true
+	case float64:
+		return big.NewFloat(x), true
+	case int64:
+		return NewFloatFromInt(int(x)), true
+	}
+
+	return nil, false
+}
+
 func (b *BinOp) numericEval(left, right interface{}) (bool, error) {
-	lNum, ok := left.(*big.Float)
+	lNum, ok := b.toBigFloat(left)
 	if !ok {
 		return false, fmt.Errorf("left operand is not a number")
 	}
-	rNum, ok := right.(*big.Float)
+	rNum, ok := b.toBigFloat(right)
 	if !ok {
 		return false, fmt.Errorf("right operand is not a number")
 	}

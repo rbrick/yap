@@ -41,4 +41,55 @@ var BuiltinFunctions = map[string]Function{
 			return nil, fmt.Errorf("length function not supported for type %T", value)
 		}
 	},
+
+	"where": func(ctx *EvalContext, args []Expr) (interface{}, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("where function requires exactly 2 arguments")
+		}
+		arr, err := args[0].Eval(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		conditionExpr := args[1]
+
+		if conditionExpr == nil {
+			return nil, fmt.Errorf("where function requires a condition expression")
+		}
+
+		if conditionExpr.(*BinOp) == nil {
+			return nil, fmt.Errorf("where function requires a binary operation as condition")
+		}
+
+		arrSlice, ok := arr.([]interface{})
+
+		if !ok {
+			return nil, fmt.Errorf("where function requires first argument to be an array")
+		}
+
+		matches := []any{}
+		for _, item := range arrSlice {
+			// inject special @ identifier for iterative elements
+			jsonItem := map[string]any{
+				"@": item,
+			}
+
+			conditionCtx := &EvalContext{
+				Json:    jsonItem,
+				FuncMap: ctx.FuncMap,
+			}
+
+			result, err := conditionExpr.Eval(conditionCtx)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if result.(bool) {
+				matches = append(matches, item)
+			}
+		}
+
+		return matches, nil
+	},
 }
