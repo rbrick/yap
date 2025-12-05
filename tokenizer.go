@@ -20,24 +20,55 @@ const (
 	LessThan    = '<'
 	GreaterThan = '>'
 	Quote       = '"'
+
+	Multiplication = '*'
+	Addition       = '+'
+	Subtraction    = '-'
+	Division       = '/'
 )
 
 type TokenType int
 
 const (
-	Identifier TokenType = iota
-	String
-	Numeric
-	Operator
-	Punctuation
+	Identifier     TokenType = iota // 0
+	String                          // 1
+	Numeric                         // 2 - numeric
+	UnaryOperator                   // 3
+	BinaryOperator                  // 4
+	Punctuation                     // 5
 	WhiteSpace
 )
+
+func (tt TokenType) String() string {
+	switch tt {
+	case Identifier:
+		return "Identifier"
+	case String:
+		return "String"
+	case Numeric:
+		return "Numeric"
+	case UnaryOperator:
+		return "UnaryOperator"
+	case BinaryOperator:
+		return "BinaryOperator"
+	case Punctuation:
+		return "Punctuation"
+	case WhiteSpace:
+		return "WhiteSpace"
+	default:
+		return "Unknown"
+	}
+}
 
 type Token struct {
 	Type      TokenType
 	Literal   string
 	Numeric   *big.Float
 	IsDecimal bool
+}
+
+func (t *Token) String() string {
+	return t.Literal
 }
 
 type Tokenizer struct {
@@ -109,7 +140,7 @@ func (t *Tokenizer) readEquality(op rune) (*Token, error) {
 
 		return &Token{
 			Literal: string(op),
-			Type:    Operator,
+			Type:    BinaryOperator,
 		}, nil
 	}
 
@@ -125,7 +156,7 @@ func (t *Tokenizer) readEquality(op rune) (*Token, error) {
 	if op != '=' && second != '=' {
 		return &Token{
 			Literal: string(op),
-			Type:    Operator,
+			Type:    BinaryOperator,
 		}, nil
 	}
 
@@ -142,7 +173,7 @@ func (t *Tokenizer) readEquality(op rune) (*Token, error) {
 
 	return &Token{
 		Literal: string(op) + "=",
-		Type:    Operator,
+		Type:    BinaryOperator,
 	}, nil
 }
 
@@ -269,6 +300,13 @@ func (t *Tokenizer) ReadToken() (*Token, error) {
 	case Equal, Exclamation, LessThan, GreaterThan:
 		{
 			return t.readEquality(r)
+		}
+	case Multiplication, Addition, Subtraction, Division:
+		{
+			return &Token{
+				Type:    BinaryOperator,
+				Literal: string(r),
+			}, nil
 		}
 	case Quote:
 		{

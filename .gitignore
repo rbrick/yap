@@ -1,3 +1,4 @@
 *.json
 yap
 *.o
+examples/examples
