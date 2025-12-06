@@ -3,6 +3,7 @@ package yap
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 )
 
 type Expr interface {
@@ -86,6 +87,29 @@ func (b *BinOp) isNumeric(v interface{}) bool {
 	return ok
 }
 
+func (b *BinOp) toBoolean(v interface{}) bool {
+	switch x := v.(type) {
+	case bool:
+		// already truthy
+		return x
+	case string:
+		b, err := strconv.ParseBool(x)
+
+		if err != nil {
+			return false
+		}
+		return b
+	case int:
+		return x > 0
+	case float64:
+		return x > 0.0
+	case *big.Float:
+		return x.Cmp(big.NewFloat(0)) == 1
+	}
+
+	return false
+}
+
 func (b *BinOp) Eval(ctx *EvalContext) (interface{}, error) {
 	left, err := b.Left.Eval(ctx)
 	if err != nil {
@@ -97,6 +121,10 @@ func (b *BinOp) Eval(ctx *EvalContext) (interface{}, error) {
 	}
 
 	switch b.Operator {
+	case "||":
+		return b.toBoolean(left) || b.toBoolean(right), nil
+	case "&&":
+		return b.toBoolean(left) && b.toBoolean(right), nil
 	case "==":
 		if b.isNumeric(left) && b.isNumeric(right) {
 			return b.numericEval(left, right)

@@ -3,6 +3,7 @@ package yap
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"math/big"
 	"strings"
@@ -20,6 +21,8 @@ const (
 	LessThan    = '<'
 	GreaterThan = '>'
 	Quote       = '"'
+	Ampersand   = '&'
+	Pipe        = '|'
 
 	Multiplication = '*'
 	Addition       = '+'
@@ -33,10 +36,9 @@ const (
 	Identifier     TokenType = iota // 0
 	String                          // 1
 	Numeric                         // 2 - numeric
-	UnaryOperator                   // 3
-	BinaryOperator                  // 4
-	Punctuation                     // 5
-	WhiteSpace
+	BinaryOperator                  // 3
+	Punctuation                     // 4
+	WhiteSpace                      // 5
 )
 
 func (tt TokenType) String() string {
@@ -47,8 +49,6 @@ func (tt TokenType) String() string {
 		return "String"
 	case Numeric:
 		return "Numeric"
-	case UnaryOperator:
-		return "UnaryOperator"
 	case BinaryOperator:
 		return "BinaryOperator"
 	case Punctuation:
@@ -128,6 +128,37 @@ func (t *Tokenizer) ReadString() (string, error) {
 	}
 
 	return sb.String(), nil
+}
+
+func (t *Tokenizer) readConditional(op rune) (*Token, error) {
+	second, _, err := t.reader.ReadRune()
+
+	if err == io.EOF {
+		if op == '=' {
+			return nil, errors.New("incomplete operator")
+		}
+
+		return &Token{
+			Literal: string(op),
+			Type:    BinaryOperator,
+		}, nil
+	}
+
+	switch op {
+	case Pipe:
+		if second != Pipe {
+			return nil, fmt.Errorf("invalid conditional")
+		}
+	case Ampersand:
+		if second != Ampersand {
+			return nil, fmt.Errorf("invalid conditional")
+		}
+	}
+
+	return &Token{
+		Type:    BinaryOperator,
+		Literal: string(op) + string(second),
+	}, nil
 }
 
 func (t *Tokenizer) readEquality(op rune) (*Token, error) {
@@ -300,6 +331,10 @@ func (t *Tokenizer) ReadToken() (*Token, error) {
 	case Equal, Exclamation, LessThan, GreaterThan:
 		{
 			return t.readEquality(r)
+		}
+	case Ampersand, Pipe:
+		{
+			return t.readConditional(r)
 		}
 	case Multiplication, Addition, Subtraction, Division:
 		{

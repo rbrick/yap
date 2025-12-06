@@ -54,5 +54,17 @@ func Evaluate(str string, data string) (interface{}, error) {
 		return nil, err
 	}
 
-	return evaluator.Eval(data)
+	result, err := evaluator.Eval(data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	encoded, err := json.Marshal(result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return string(encoded), nil
 }
